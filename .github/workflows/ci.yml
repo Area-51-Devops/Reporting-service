@@ -18,11 +18,11 @@ jobs:
       contents: write
       packages: read
     with:
-      working_directory: "."
+      working_directory: "services/reporting-service"
       image_name: "reporting-service"
       service-name: "reporting-service"
-      docker_context: "."
-      dockerfile_path: "Dockerfile"
+      docker_context: "services"
+      dockerfile_path: "reporting-service/Dockerfile"
       run_build: false
       sonar_project_key: "reporting-service"
     secrets:
