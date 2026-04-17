@@ -19,7 +19,7 @@ jobs:
       packages: read
     with:
       working_directory: "services/reporting-service"
-      image_name: "reporting-service"
+      image_name: "area51devops/reporting-service"
       service-name: "reporting-service"
       docker_context: "services"
       dockerfile_path: "reporting-service/Dockerfile"
