@@ -10,7 +10,6 @@ on:
       - 'services/reporting-service/**'
       - 'services/shared/**'
   workflow_dispatch:
-  workflow_dispatch:
 
 jobs:
   ci:
