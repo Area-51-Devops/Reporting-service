@@ -50,7 +50,7 @@ jobs:
   # ── Stage 2: Build Image · Trivy Scan · Push · Notify ────────────────────────
   # Only starts once BOTH ci-sonar and ci-snyk have passed.
   ci-image:
-    needs: [ci-snyk]
+    needs: [ci-sonar, ci-snyk]
     uses: Area-51-Devops/ci-templates/.github/workflows/ci-image.yml@newsep
     permissions:
       contents: write
