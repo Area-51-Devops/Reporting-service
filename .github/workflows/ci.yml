@@ -1,5 +1,15 @@
 name: Reporting Service CI
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Reporting Service CI — calls each reusable workflow directly (no common-ci.yml).
+#
+# Execution order:
+#   ci-sonar ──┐
+#              ├──► ci-image  (only starts when BOTH quality gates pass)
+#   ci-snyk  ──┘
+#
+# ──────────────────────────────────────────────────────────────────────────────
+
 on:
   push:
     paths:
@@ -12,23 +22,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci:
-    uses: Area-51-Devops/ci-templates/.github/workflows/common-ci.yml@main
+
+  # # ── Stage 1a: SonarQube Scan + Quality Gate ──────────────────────────────────
+  ci-sonar:
+    uses: Area-51-Devops/ci-templates/.github/workflows/ci-sonar.yml@newsep
     permissions:
       contents: write
-      packages: read
     with:
       working_directory: "services/reporting-service"
-      image_name: "area51devops/reporting-service"
-      service-name: "reporting-service"
-      docker_context: "services"
-      dockerfile_path: "reporting-service/Dockerfile"
-      run_build: false
       sonar_project_key: "reporting-service"
+      service-name: "reporting-service"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  # ── Stage 1b: Dependency Build + Snyk Scan ───────────────────────────────────
+  ci-snyk:
+    uses: Area-51-Devops/ci-templates/.github/workflows/ci-snyk.yml@newsep
+    permissions:
+      contents: write
+    with:
+      working_directory: "services/reporting-service"
+      service-name: "reporting-service"
+    secrets:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  # ── Stage 2: Build Image · Trivy Scan · Push · Notify ────────────────────────
+  # Only starts once BOTH ci-sonar and ci-snyk have passed.
+  ci-image:
+    needs: [ci-snyk]
+    uses: Area-51-Devops/ci-templates/.github/workflows/ci-image.yml@newsep
+    permissions:
+      contents: write
+    with:
+      working_directory: "services/reporting-service"
+      image_name: "area51devops/reporting-service"
+      run_build: false
+      docker_context: "services"
+      dockerfile_path: "reporting-service/Dockerfile"
+      service-name: "reporting-service"
+    secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
